@@ -10,6 +10,29 @@ app = Flask(__name__)
 from flask import request
 from flasgger import Swagger, LazyString, LazyJSONEncoder
 from flasgger import swag_from
+import pandas as pd
+import numpy as np
+
+# init dataframe kamus
+# df = pd.read_csv("/content/drive/MyDrive/archive/data.csv", encoding='latin-1')
+df_kamus = pd.read_csv("archive/new_kamusalay.csv", encoding='latin-1')
+df = df_kamus
+df = df.reset_index()
+
+def cleanText(input):
+  text = input.lower()
+  text = re.sub(r"\\n", ' ', text)
+  text = re.sub(r"\\\w{3}", '', text)
+  text = re.findall(r"[\w]+",text)
+  output = ''
+  word = ''
+  for val in text:
+    word = val
+    for index, row in df.iterrows():
+      if val == row[1]:
+        word = row[2]
+    output = output +' '+ word
+  return output.strip()
 
 app.json_encoder = LazyJSONEncoder
 swagger_template = dict(
@@ -42,8 +65,8 @@ def text_processing():
 
     json_response = {
         'status_code': 200,
-        'description': "Original Teks",
-        'data': re.sub(r'[^a-zA-Z0-9]', ' ', text)
+        'description': "Cleaned Teks",
+        'data': cleanText(text)
     }
 
     response_data = jsonify(json_response)
@@ -54,11 +77,12 @@ def text_processing():
 def file_text_processing():
 
     text = request.form.get('text')
+    print(text)
 
     json_response = {
         'status_code': 200,
         'description': "Original Teks",
-        'data': re.sub(r'[^a-zA-Z0-9]', ' ', text)
+        # 'data': re.sub(r'[^a-zA-Z0-9]', ' ', text)
     }
 
     response_data = jsonify(json_response)
