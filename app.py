@@ -22,13 +22,13 @@ df = df_kamus
 df = df.reset_index()
 
 
-# create database kamus, replace jika sudah ada
+# create database kamus ke sqlite, replace jika sudah ada
 conn = sqlite3.connect("kamus.db")
 df.to_sql("kamus", conn, if_exists='replace', index=False)
 conn.close()
 
 
-# berhubung looping dictionary belum bisa cepat jadi mending pakai query saja
+# berhubung looping dictionary belum bisa cepat jadi mending pakai query saja via sqlite
 def checkDict(word):
     conn = None
     try:
@@ -42,8 +42,6 @@ def checkDict(word):
         return row[0]
     else:
         return None
-
-
 
 
 # hapus emoticon, symbols, dan ubah ke kata-kata non alay
