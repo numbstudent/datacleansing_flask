@@ -19,7 +19,7 @@ df_kamus = pd.read_csv("archive/new_kamusalay.csv", encoding='latin-1')
 df = df_kamus
 df = df.reset_index()
 
-def cleanText(input):
+def cleanAndReplaceText(input):
   text = input.lower()
   text = re.sub(r"\\n", ' ', text)
   text = re.sub(r"\\\w{3}", '', text)
@@ -33,6 +33,14 @@ def cleanText(input):
         word = row[2]
     output = output +' '+ word
   return output.strip()
+
+def cleanText(input):
+  text = input
+  text = re.sub(r"\\n", ' ', text)
+  text = re.sub(r"\\\w{3}", '', text)
+  text = re.findall(r"[\w]+",text)
+  output = ' '.join(text)
+  return output
 
 app.json_encoder = LazyJSONEncoder
 swagger_template = dict(
@@ -66,7 +74,10 @@ def text_processing():
     json_response = {
         'status_code': 200,
         'description': "Cleaned Teks",
-        'data': cleanText(text)
+        'data': [{
+            'output1': cleanText(text),
+            'output2': cleanAndReplaceText(text) 
+        }]
     }
 
     response_data = jsonify(json_response)
@@ -75,18 +86,26 @@ def text_processing():
 @swag_from("file_text_processing.yml", methods=['POST'])
 @app.route('/file-text-processing', methods=['POST'])
 def file_text_processing():
-
-    text = request.form.get('text')
-    print(text)
-
+    file = request.files['text']
+    df = pd.read_csv(file, header=None)
+    output1 = []
+    output2 = []
+    for index, row in df.iterrows():
+        print("processing "+str(index+1)" of "+str(df.size))
+        output1.append(cleanText(row[0]))
+        output2.append(cleanAndReplaceText(row[0]))
     json_response = {
         'status_code': 200,
         'description': "Original Teks",
-        # 'data': re.sub(r'[^a-zA-Z0-9]', ' ', text)
+        'data': [{
+            'output1': output1,
+            'output2': output2 
+        }]
     }
 
     response_data = jsonify(json_response)
     return response_data
 
 if __name__ == '__main__':
-    app.run()
+    # app.run()
+    app.run(debug=True)
