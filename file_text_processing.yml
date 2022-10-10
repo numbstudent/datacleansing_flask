@@ -3,7 +3,7 @@ tags:
 get:
   description: File teks yang akan diproses
 parameters:
-  - name: text
+  - name: file
     in: formData
     required: true
     type: file

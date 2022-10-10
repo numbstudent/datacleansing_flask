@@ -120,7 +120,7 @@ def text_processing():
 @swag_from("file_text_processing.yml", methods=['POST'])
 @app.route('/file-text-processing', methods=['POST'])
 def file_text_processing():
-    file = request.files['text']
+    file = request.files['file']
     df = pd.read_csv(file, header=None)
     df = df[:50]    #biar gak banyak banyak yaaa
     data = []
@@ -133,6 +133,24 @@ def file_text_processing():
     json_response = {
         'status_code': 200,
         'description': "Original vs Cleaned",
+        'data': data
+    }
+
+    response_data = jsonify(json_response)
+    return response_data
+    
+@swag_from("file_generate.yml", methods=['POST'])
+@app.route('/file-generate', methods=['POST'])
+def file_generate():
+    amount = request.form.get('amount')
+    wordincluded = request.form.get('wordincluded')
+
+    from textgen import generate_text
+    data = generate_text(amount, wordincluded)
+    
+    json_response = {
+        'status_code': 200,
+        'description': "Random text file generation. File in archive/test_data.csv",
         'data': data
     }
 

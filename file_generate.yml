@@ -1,0 +1,20 @@
+tags:
+  - name: File Generate
+get:
+  description: Melakukan generate file berisikan text
+parameters:
+  - name: amount
+    in: formData
+    required: true
+    type: number
+  - name: wordincluded
+    in: formData
+    required: false
+    type: string
+responses:
+  '200':
+    description: Successful response
+  '400':
+    description: Bad Request
+  '500':
+    description: Internal Server Error
