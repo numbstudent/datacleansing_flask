@@ -3,6 +3,10 @@ import pandas as pd
 
 import re
 
+from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+
+
 from flask import Flask, jsonify
 
 app = Flask(__name__)
@@ -27,6 +31,19 @@ conn = sqlite3.connect("kamus.db")
 df.to_sql("kamus", conn, if_exists='replace', index=False)
 conn.close()
 
+# create stop words
+def stopwordRemove(text):
+    factory = StopWordRemoverFactory()
+    stopword = factory.create_stop_word_remover()
+    output = stopword.remove(text)
+    return output 
+
+def textStem(text):
+    factory = StemmerFactory()
+    stemmer = factory.create_stemmer()
+    output   = stemmer.stem(text)
+    return output
+
 
 # berhubung looping dictionary belum bisa cepat jadi mending pakai query saja via sqlite
 def checkDict(word):
@@ -47,6 +64,10 @@ def checkDict(word):
 # hapus emoticon, symbols, dan ubah ke kata-kata non alay
 def cleanAndReplaceText(input):
   text = input.lower()
+  text = re.sub(r'http\S+', '', text) #URL removal
+  text = re.sub(r"url", ' ', text) # 'url' string removal
+  text = re.sub(r"rt", ' ', text) # retweet removal
+  text = re.sub(r"user", ' ', text) # USER removal
   text = re.sub(r"\\n", ' ', text) # newline removal
   text = re.sub(r"\\\w{3}", '', text) # emoticon removal
   text = re.findall(r"[\w]+",text) # symbols removal
@@ -54,27 +75,12 @@ def cleanAndReplaceText(input):
   word = ''
   for val in text:
     word = val
-
-    # gak jadi pakai soalnya berat
-    # for index, row in df.iterrows():
-    #   if val == row[1]:
-    #     word = row[2]
-    
     
     translate = checkDict(word) # replace word to non alay
     if translate:
         word = translate
     output = output +' '+ word
   return output.strip()
-
-# abaikan saja
-def cleanText(input):
-  text = input
-  text = re.sub(r"\\n", ' ', text)
-  text = re.sub(r"\\\w{3}", '', text)
-  text = re.findall(r"[\w]+",text)
-  output = ' '.join(text)
-  return output
 
 app.json_encoder = LazyJSONEncoder
 swagger_template = dict(
@@ -102,10 +108,13 @@ swagger = Swagger(app, template=swagger_template,config=swagger_config)
 @swag_from("text_processing.yml", methods=['POST'])
 @app.route('/text-processing', methods=['POST'])
 def text_processing():
-    text = request.form.get('text')
-
+    originaltext = request.form.get('text')
     data = []
-    val = {'original': text, 'cleaned': cleanAndReplaceText(text)}
+    text = originaltext
+    cleanedtext = cleanAndReplaceText(text)
+    cleanedtext = stopwordRemove(cleanedtext)
+    cleanedtext = textStem(cleanedtext)
+    val = {'original': text, 'cleaned': cleanedtext}
     data.append(val)
 
     json_response = {
@@ -122,13 +131,14 @@ def text_processing():
 def file_text_processing():
     file = request.files['file']
     df = pd.read_csv(file, header=None)
-    df = df[:50]    #biar gak banyak banyak yaaa
     data = []
-    # output1 = []
-    output2 = []
     for index, row in df.iterrows():
         print("processing "+str(index+1)+" of "+str(df.size))
-        val = {'original':row[0], 'cleaned':cleanAndReplaceText(row[0])}
+        text = row[0]
+        cleanedtext = cleanAndReplaceText(text)
+        cleanedtext = stopwordRemove(cleanedtext)
+        cleanedtext = textStem(cleanedtext)
+        val = {'original':text, 'cleaned':cleanedtext}
         data.append(val)
     json_response = {
         'status_code': 200,
