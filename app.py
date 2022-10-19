@@ -14,8 +14,6 @@ app = Flask(__name__)
 from flask import request
 from flasgger import Swagger, LazyString, LazyJSONEncoder
 from flasgger import swag_from
-import pandas as pd
-import numpy as np
 import sqlite3
 
 
