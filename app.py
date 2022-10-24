@@ -63,9 +63,9 @@ def checkDict(word):
 def cleanAndReplaceText(input):
   text = input.lower()
   text = re.sub(r'http\S+', '', text) #URL removal
-  text = re.sub(r"url", ' ', text) # 'url' string removal
-  text = re.sub(r"rt", ' ', text) # retweet removal
-  text = re.sub(r"user", ' ', text) # USER removal
+  text = re.sub(r"url{3}", ' ', text) # 'url' string removal
+  text = re.sub(r"rt{2}", ' ', text) # retweet removal
+  text = re.sub(r"user{4}", ' ', text) # USER removal
   text = re.sub(r"\\n", ' ', text) # newline removal
   text = re.sub(r"\\\w{3}", '', text) # emoticon removal
   text = re.findall(r"[\w]+",text) # symbols removal
@@ -81,11 +81,25 @@ def cleanAndReplaceText(input):
   return output.strip()
 
 app.json_encoder = LazyJSONEncoder
+
+description = '''
+Dokumentasi API untuk Data Cleansing
+
+- File hasil generate untuk text processing: archive/test_data.csv
+- File original untuk generate: archive/data.csv
+- File kamus untuk translate alay -> non alay: archive/new_kamusalay.csv
+
+Terdapat 3 API Endpoint:
+1. <a href="../file-generate" target="blank">File-generate</a>: membuat text file yang sesuai format untuk uji coba di file-text-processing
+2. <a href="../file-text-processing" target="blank">File-text-processing</a>: melakukan cleansing terhadap text dengan inputan file berformat csv; Hasil generate dari point 1 dapat digunakan di sini
+3. <a href="../text-processing" target="blank">Text-processing</a>: melakukan cleansing terhadap text dengan inputan text field
+'''
+
 swagger_template = dict(
     info = {
         'title': LazyString(lambda: 'Gold Challenge Data Science Binar Academy '),
         'version': LazyString(lambda: '1.0.0'),
-        'description': LazyString(lambda: 'Dokumentasi API untuk Data Cleansing')
+        'description': LazyString(lambda: description)
     },
     host = LazyString(lambda: request.host)
 )
